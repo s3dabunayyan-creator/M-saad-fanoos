@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>لوحة المعلم · فانوس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Readex+Pro:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#f4f8f8; --card:#fff; --ink:#0f2a2b; --muted:#557072; --line:#d7e4e4; --brand:#006166; --brand2:#00d47d;
+  --s0:#e9eeee; --good:#0ca30c; --warn:#fab219; --bad:#d03b3b;
+  --f-display:"Lalezar","Readex Pro",system-ui,sans-serif; --f-body:"Readex Pro",Tahoma,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;padding:16px}
+.wrap{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--f-display);font-weight:400;margin:0;line-height:1.3}
+h1{color:var(--brand);font-size:2.2rem}
+h2{font-size:1.5rem}
+.small{font-size:.85rem;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,button{font:inherit}
+select{padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;min-width:0;max-width:100%}
+.btn{border:0;border-radius:12px;padding:8px 16px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
+.btn.alt{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile .v{font-family:var(--f-display);font-size:2.4rem;line-height:1.1;color:var(--brand);font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#pyr svg{width:100%;height:auto;display:block;max-width:520px;margin:auto}
+#pyr text{font-family:var(--f-body)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.bars{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto;padding-inline-end:4px}
+.brow{display:grid;grid-template-columns:2.2em minmax(0,8em) minmax(0,1fr) 3.4em;gap:8px;align-items:center;cursor:pointer;border-radius:10px;padding:3px 4px;border:0;background:none;text-align:start;color:inherit;font:inherit;width:100%}
+.brow:hover,.brow.sel{background:#e7f4f2}
+.brow .k{font-family:var(--f-display);font-size:1.15rem;text-align:center;color:var(--muted)}
+.brow .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.track{height:18px;background:var(--s0);border-radius:6px;overflow:hidden}
+.fill{height:100%;border-radius:0 4px 4px 0;background:var(--brand)}
+.brow .p{font-variant-numeric:tabular-nums;font-weight:700;text-align:end}
+.tablewrap{overflow:auto}
+table{border-collapse:separate;border-spacing:2px;width:100%;font-size:.9rem}
+th{font-weight:700;color:var(--muted);padding:6px;text-align:center;white-space:nowrap}
+th:first-child,td:first-child{text-align:start}
+td{padding:6px 8px;text-align:center;border-radius:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.na{color:#9aaaaa;background:#f5f7f7}
+tr.avg td{font-weight:700;border-top:2px solid var(--ink)}
+tbody tr{cursor:pointer}
+tbody tr:hover td:first-child{text-decoration:underline}
+.band{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;font-weight:700;border-radius:99px;padding:1px 8px;white-space:nowrap}
+.b3{background:#e3f6e3;color:#0a6e0a}.b2{background:#fff3d6;color:#8a5a00}.b1{background:#fde6e6;color:#a42a2a}
+.msg{padding:24px;text-align:center}
+#tip{position:fixed;pointer-events:none;background:#0f2a2b;color:#fff;font-size:.85rem;border-radius:8px;padding:6px 10px;z-index:9;max-width:260px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>🏮 لوحة المعلم</h1><p class="small">نتائج الطلاب الذين لعبوا فانوس فرديًا، ودرجة تمكّنهم على هرم بلوم</p></div>
+    <div class="ctl">
+      <select id="game" aria-label="المسابقة">
+        <optgroup label="الصف الخامس">
+          <option value="51">كل ألعاب الخامس</option>
+          <option value="5101">خامس ١ · الأصول الثلاثة</option>
+          <option value="5102">خامس ٢ · العبادة</option>
+          <option value="5103">خامس ٣ · معرفة الدين</option>
+          <option value="5104">خامس ٤ · الخوف والرجاء والتوكل</option>
+          <option value="5105">خامس ٥ · الخشوع والإنابة والذبح لله</option>
+        </optgroup>
+        <optgroup label="الصف الثالث">
+          <option value="31">كل ألعاب الثالث</option>
+          <option value="3101">ثالث ١ · الإيمان</option>
+          <option value="3102">ثالث ٢ · أركان الإسلام</option>
+          <option value="3103">ثالث ٣ · الإحسان</option>
+          <option value="3104">ثالث ٤ · آداب قضاء الحاجة</option>
+        </optgroup>
+      </select>
+      <button class="btn" id="reload" type="button">↻ تحديث</button>
+    </div>
+  </div>
+
+  <div id="out"><div class="card msg">جارٍ التحميل…</div></div>
+</div>
+<div id="tip" hidden></div>
+
+<script src="fanoos-config.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const BLOOM=['تذكر','فهم','تطبيق','تحليل','تقييم','إبداع'];
+const API=()=>typeof window.FANOOS_API==='string'?window.FANOOS_API.trim():'';
+// sequential blue for mastery (light = low); text flips to white on the dark steps
+const RAMP=['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#184f95'];
+const shade=p=>p==null?'#e9eeee':RAMP[Math.min(5,Math.floor(p/100*6))];
+const inkOn=p=>p!=null&&p>=50?'#fff':'#0f2a2b';
+const band=p=>p==null?'':p>=85?'<span class="band b3">✓ متمكن</span>':p>=65?'<span class="band b2">≈ قريب</span>':'<span class="band b1">! يحتاج دعم</span>';
+const pct=r=>r&&r[1]>0?Math.round(100*r[0]/r[1]):null;
+
+function api(params){return new Promise((res,rej)=>{const u=API();if(!u)return rej(new Error('off'));
+  const cb='fz'+Date.now()+Math.floor(Math.random()*1e4),s=document.createElement('script');
+  const done=()=>{clearTimeout(t);delete window[cb];s.remove();};const t=setTimeout(()=>{done();rej(new Error('timeout'));},20000);
+  window[cb]=d=>{done();d&&d.ok?res(d):rej(new Error((d&&d.error)||'api'));};s.onerror=()=>{done();rej(new Error('net'));};
+  s.src=u+(u.includes('?')?'&':'?')+new URLSearchParams({...params,cb});document.head.appendChild(s);});}
+
+const norm=n=>String(n).replace(/\s+/g,' ').trim();
+// one row per student: their best attempt in each game, summed across the games shown
+function students(rows){
+  const best={};
+  rows.forEach(r=>{const n=norm(r.n);if(!n)return;const k=n+'|'+r.g,t=r.c+r.sp,o=best[k];
+    if(!o||t>o.c+o.sp||(t===o.c+o.sp&&r.c>o.c))best[k]={...r,n};});
+  const by={};
+  Object.values(best).forEach(r=>{const s=by[r.n]||(by[r.n]={n:r.n,c:0,sp:0,games:0,bl:{}});
+    s.c+=r.c;s.sp+=r.sp;s.games++;
+    for(const l in r.bl){const a=r.bl[l];if(!Array.isArray(a))continue;const b=s.bl[l]||(s.bl[l]=[0,0]);b[0]+=+a[0]||0;b[1]+=+a[1]||0;}});
+  const list=Object.values(by);
+  list.forEach(s=>{s.t=s.c+s.sp;let g=0,m=0;for(const l in s.bl){g+=s.bl[l][0];m+=s.bl[l][1];}s.m=m?Math.round(100*g/m):null;
+    s.lv=BLOOM.map((_,i)=>pct(s.bl[i+1]));});
+  list.sort((a,b)=>b.t-a.t||b.c-a.c);
+  list.forEach((s,i)=>s.k=i&&s.t===list[i-1].t?list[i-1].k:i+1);
+  return list;
+}
+// class level = mean of the students measured on that level
+function classLevels(list){return BLOOM.map((_,i)=>{const v=list.map(s=>s.lv[i]).filter(x=>x!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null;});}
+
+function pyramid(lv,title){
+  const W=520,H=380,top=16,bh=56,gap=4,cx=W/2,half0=250,halfTop=40;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="هرم بلوم: '+esc(title)+'"><defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#eef2f2"/><line x1="0" y1="0" x2="0" y2="8" stroke="#d0d9d9" stroke-width="3"/></pattern></defs>';
+  for(let i=0;i<6;i++){ // i=0 bottom (تذكر)
+    const yb=top+6*(bh+gap)-gap-i*(bh+gap),yt=yb-bh;
+    const hw=y=>halfTop+(half0-halfTop)*((y-top)/(6*(bh+gap)-gap));
+    const wb=hw(yb),wt=hw(yt),p=lv[i];
+    s+='<polygon class="pb" data-i="'+i+'" points="'+[cx-wb,yb,cx+wb,yb,cx+wt,yt,cx-wt,yt].join(',')+'" fill="'+(p==null?'url(#hatch)':shade(p))+'"/>';
+    const fill=p==null?'#6b8183':inkOn(p);
+    s+='<text x="'+cx+'" y="'+(yt+bh/2+1)+'" text-anchor="middle" dominant-baseline="middle" fill="'+fill+'" font-size="'+(i>4?15:18)+'" font-weight="700" pointer-events="none">'+BLOOM[i]+'  '+(p==null?'—':p+'٪')+'</text>';
+  }
+  return s+'</svg>';
+}
+
+let DATA=[],SEL=null;
+function render(){
+  const out=$('#out'),list=students(DATA);
+  if(!list.length){out.innerHTML='<div class="card msg">لا توجد نتائج لهذه المسابقة بعد.<br><span class="small">تظهر النتائج هنا عندما يُنهي الطلاب اللعبة.</span></div>';return;}
+  const cl=classLevels(list),ms=list.map(s=>s.m).filter(x=>x!=null);
+  const avg=ms.length?Math.round(ms.reduce((a,b)=>a+b,0)/ms.length):null;
+  const sel=SEL&&list.find(s=>s.n===SEL);if(!sel)SEL=null;
+  const lv=sel?sel.lv:cl,title=sel?sel.n:'الصف كاملًا';
+  const byM=[...list].sort((a,b)=>(b.m??-1)-(a.m??-1));
+  out.innerHTML=
+   '<div class="tiles">'+
+     '<div class="card tile"><div class="small">عدد الطلاب</div><div class="v">'+list.length+'</div></div>'+
+     '<div class="card tile"><div class="small">متوسط تمكّن الصف</div><div class="v">'+(avg??'—')+(avg!=null?'٪':'')+'</div>'+band(avg)+'</div>'+
+     '<div class="card tile"><div class="small">متمكنون (٨٥٪ فأكثر)</div><div class="v">'+ms.filter(x=>x>=85).length+'</div></div>'+
+     '<div class="card tile"><div class="small">يحتاجون دعمًا (أقل من ٦٥٪)</div><div class="v">'+ms.filter(x=>x<65).length+'</div></div>'+
+   '</div>'+
+   '<div class="grid2">'+
+     '<div class="card"><div class="phead"><h2>هرم بلوم · '+esc(title)+'</h2>'+(sel?'<button class="btn alt" id="all" type="button">الصف كاملًا</button>':'')+'</div>'+
+       (sel?'<p class="small">الترتيب '+sel.k+' من '+list.length+' · النقاط '+sel.t+' · التمكن '+(sel.m??'—')+'٪</p>':'<p class="small">متوسط الطلاب في كل مستوى. اضغط اسم طالب لترى هرمه.</p>')+
+       '<div id="pyr">'+pyramid(lv,title)+'</div>'+
+       '<div class="legend"><span><i class="sw" style="background:'+RAMP[0]+'"></i>تمكن منخفض</span><span><i class="sw" style="background:'+RAMP[5]+'"></i>تمكن عالٍ</span><span><i class="sw" style="background:repeating-linear-gradient(45deg,#eef2f2 0 3px,#d0d9d9 3px 5px)"></i>لم يُقَس في اللعب الفردي</span></div></div>'+
+     '<div class="card"><h2>درجة تمكّن كل طالب</h2><p class="small">نسبة الإجابات الصحيحة. الرقم على اليمين ترتيبه بالنقاط.</p><div class="bars">'+
+       byM.map(s=>'<button type="button" class="brow'+(s.n===SEL?' sel':'')+'" data-n="'+esc(s.n)+'"><span class="k">'+s.k+'</span><span class="n">'+esc(s.n)+'</span><span class="track"><span class="fill" style="display:block;width:'+(s.m||0)+'%"></span></span><span class="p">'+(s.m??'—')+(s.m!=null?'٪':'')+'</span></button>').join('')+
+     '</div></div>'+
+   '</div>'+
+   '<div class="card"><h2>جدول التمكن</h2><div class="tablewrap"><table><thead><tr><th>الطالب</th><th>الترتيب</th><th>النقاط</th>'+BLOOM.map(b=>'<th>'+b+'</th>').join('')+'<th>التمكن</th><th></th></tr></thead><tbody>'+
+     list.map(s=>'<tr data-n="'+esc(s.n)+'"><td>'+esc(s.n)+'</td><td>'+s.k+'</td><td>'+s.t+'</td>'+s.lv.map(cell).join('')+cell(s.m)+'<td>'+band(s.m)+'</td></tr>').join('')+
+     '<tr class="avg"><td>الصف</td><td></td><td></td>'+cl.map(cell).join('')+cell(avg)+'<td>'+band(avg)+'</td></tr>'+
+   '</tbody></table></div></div>';
+  out.querySelectorAll('[data-n]').forEach(el=>el.onclick=()=>{SEL=SEL===el.dataset.n?null:el.dataset.n;render();window.scrollTo({top:0,behavior:'smooth'});});
+  if($('#all'))$('#all').onclick=()=>{SEL=null;render();};
+  const tip=$('#tip');
+  out.querySelectorAll('.pb').forEach(pb=>{pb.onmousemove=e=>{const i=+pb.dataset.i,p=lv[i];
+      const n=sel?'':' · '+list.filter(s=>s.lv[i]!=null).length+' طالبًا';
+      tip.textContent=BLOOM[i]+': '+(p==null?'لا توجد أسئلة من هذا المستوى في اللعب الفردي':p+'٪'+n);tip.hidden=false;
+      tip.style.left=Math.min(innerWidth-270,e.clientX+12)+'px';tip.style.top=(e.clientY+12)+'px';};
+    pb.onmouseleave=()=>tip.hidden=true;});
+}
+function cell(p){return p==null?'<td class="na">—</td>':'<td style="background:'+shade(p)+';color:'+inkOn(p)+'">'+p+'٪</td>';}
+
+async function load(){
+  const out=$('#out');
+  if(!API()){out.innerHTML='<div class="card msg">لم يُربط جدول النتائج بعد.</div>';return;}
+  out.innerHTML='<div class="card msg">جارٍ التحميل…</div>';
+  try{const d=await api({a:'list',gid:$('#game').value});DATA=d.rows||[];render();}
+  catch(e){out.innerHTML='<div class="card msg">تعذر جلب النتائج. تأكد من الاتصال ثم اضغط تحديث.</div>';}
+}
+try{const g=localStorage.getItem('fanoosDashGame');if(g&&$('#game').querySelector('option[value="'+g+'"]'))$('#game').value=g;}catch(e){}
+$('#game').onchange=()=>{SEL=null;try{localStorage.setItem('fanoosDashGame',$('#game').value);}catch(e){}load();};
+$('#reload').onclick=load;
+load();
+})();
+</script>
+</body>
+</html>

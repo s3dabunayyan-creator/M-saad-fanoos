@@ -198,6 +198,20 @@ td.tot{font-family:var(--f-display);font-size:1.4rem;color:var(--gold)}
 .answers div{border-radius:16px;padding:10px;font-family:var(--f-display);font-size:1.4rem;color:var(--on)}
 canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:20;width:100%;height:100%}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* class ranking (solo play) */
+.rank{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:560px;margin-inline:auto;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px}
+.rank h3{font-size:1.8rem;color:var(--gold)}
+.myrank{display:flex;align-items:baseline;gap:10px;font-family:var(--f-display)}
+.myrank .md{font-size:3rem;line-height:1}
+.myrank .rn{font-size:4.4rem;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums}
+.myrank .of{font-size:1.6rem;color:var(--muted)}
+.lb{list-style:none;margin:0;padding:0;width:100%;display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.lb li{display:flex;align-items:center;gap:10px;background:var(--deep);border-radius:14px;padding:6px 12px;font-size:1.05rem}
+.lb li .k{font-family:var(--f-display);font-size:1.4rem;min-width:2.2em;text-align:center}
+.lb li .n{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb li .s{font-family:var(--f-display);font-size:1.4rem;color:var(--gold);font-variant-numeric:tabular-nums}
+.lb li.me{background:var(--gold);color:var(--on)}
+.lb li.me .s{color:var(--on)}
 </style>
 
 <canvas id="stars" aria-hidden="true"></canvas>
@@ -2517,6 +2531,7 @@ var qrcode = function() {
     return qrcode;
 }));
 </script>
+<script src="https://s3dabunayyan-creator.github.io/M-saad-fanoos/fanoos-config.js"></script>
 <script>
 document.documentElement.lang='ar';document.documentElement.dir='rtl';
 (function(){
@@ -2561,31 +2576,31 @@ const LOGO='<img class="logo" alt="مدارس الرياض - حطين" src="data
 const LEVELS=[
  {id:1,name:'سُلّم الدين',q:'ما مراتب الدين؟',color:'var(--g1)',answer:'الإسلام ثم الإيمان ثم الإحسان',
   ch:[
-   {t:'mcq',p:'كم مراتب الدين؟',o:['٢','٣','٤'],a:1,proof:{h:1,t:'ديننا الحنيف له ثلاث مراتب: الإسلام، الإيمان، الإحسان',r:'كتاب الدراسات الإسلامية، الدرس الأول'}},
-   {t:'order',p:'رتّب مراتب الدين من الأولى',w:['الإسلام','الإيمان','الإحسان'],proof:{h:1,t:'«فإنَّه جبريلُ أتاكم يُعلِّمُكم دينَكم»',r:'حديث جبريل، أخرجه مسلم (8)'}},
-   {t:'mcq',p:'من السائل في حديث جبريل؟',o:['جبريل عليه السلام','عمر بن الخطاب','أبو بكر'],a:0,proof:{h:1,t:'«فإنَّه جبريلُ أتاكم يُعلِّمُكم دينَكم»',r:'أخرجه مسلم (8)'}},
-   {t:'mcq',p:'من الذي روى حديث جبريل؟',o:['عمر بن الخطاب','خالد بن الوليد','علي بن أبي طالب'],a:0,proof:{h:1,t:'عن عمرَ بنِ الخطّابِ رضي الله عنه قال: بينما نحنُ عندَ رسولِ اللهِ ﷺ ذاتَ يومٍ…',r:'أخرجه مسلم (8)'}},
-   {t:'act',p:'اجلس جلسة المتعلم المؤدب أمام معلمك كما جلس جبريل عليه السلام',sec:45,proof:{h:1,t:'فأسندَ رُكبتيه إلى رُكبتيه، ووضعَ كفَّيه على فخذيه',r:'حديث جبريل، أخرجه مسلم (8)'}},
-   {t:'paper',p:'ارسم سُلّمًا من ثلاث درجات، واكتب عليه مراتب الدين بالترتيب',sec:120,proof:{h:1,t:'المرتبة الأولى: الإسلام. الثانية: الإيمان. الثالثة: الإحسان',r:'كتاب الدراسات الإسلامية، الدرس الأول'}}
+   {bl:1,t:'mcq',p:'كم مراتب الدين؟',o:['٢','٣','٤'],a:1,proof:{h:1,t:'ديننا الحنيف له ثلاث مراتب: الإسلام، الإيمان، الإحسان',r:'كتاب الدراسات الإسلامية، الدرس الأول'}},
+   {bl:1,t:'order',p:'رتّب مراتب الدين من الأولى',w:['الإسلام','الإيمان','الإحسان'],proof:{h:1,t:'«فإنَّه جبريلُ أتاكم يُعلِّمُكم دينَكم»',r:'حديث جبريل، أخرجه مسلم (8)'}},
+   {bl:1,t:'mcq',p:'من السائل في حديث جبريل؟',o:['جبريل عليه السلام','عمر بن الخطاب','أبو بكر'],a:0,proof:{h:1,t:'«فإنَّه جبريلُ أتاكم يُعلِّمُكم دينَكم»',r:'أخرجه مسلم (8)'}},
+   {bl:1,t:'mcq',p:'من الذي روى حديث جبريل؟',o:['عمر بن الخطاب','خالد بن الوليد','علي بن أبي طالب'],a:0,proof:{h:1,t:'عن عمرَ بنِ الخطّابِ رضي الله عنه قال: بينما نحنُ عندَ رسولِ اللهِ ﷺ ذاتَ يومٍ…',r:'أخرجه مسلم (8)'}},
+   {bl:3,t:'act',p:'اجلس جلسة المتعلم المؤدب أمام معلمك كما جلس جبريل عليه السلام',sec:45,proof:{h:1,t:'فأسندَ رُكبتيه إلى رُكبتيه، ووضعَ كفَّيه على فخذيه',r:'حديث جبريل، أخرجه مسلم (8)'}},
+   {bl:6,t:'paper',p:'ارسم سُلّمًا من ثلاث درجات، واكتب عليه مراتب الدين بالترتيب',sec:120,proof:{h:1,t:'المرتبة الأولى: الإسلام. الثانية: الإيمان. الثالثة: الإحسان',r:'كتاب الدراسات الإسلامية، الدرس الأول'}}
   ]},
  {id:2,name:'بيت الإسلام',q:'ما الإسلام؟',color:'var(--g2)',answer:'لا إله إلا الله، محمد رسول الله',
   ch:[
-   {t:'mcq',p:'معنى «لا إله إلا الله»',o:['لا معبود بحق إلا الله','لا أحد في البيت','الله في السماء فقط'],a:0,proof:{t:'﴿شَهِدَ اللَّهُ أَنَّهُ لَا إِلَٰهَ إِلَّا هُوَ وَالْمَلَائِكَةُ وَأُولُو الْعِلْمِ قَائِمًا بِالْقِسْطِ ۚ لَا إِلَٰهَ إِلَّا هُوَ الْعَزِيزُ الْحَكِيمُ﴾',r:'سورة آل عمران: 18'}},
-   {t:'sort',p:'نفي أم إثبات؟',bins:['نفي','إثبات'],items:[['لا إله','i'],['إلا الله','m'],['﴿إِنَّنِي بَرَاءٌ مِّمَّا تَعْبُدُونَ﴾','i'],['﴿إِلَّا الَّذِي فَطَرَنِي﴾','m']],proof:{t:'﴿وَإِذْ قَالَ إِبْرَاهِيمُ لِأَبِيهِ وَقَوْمِهِ إِنَّنِي بَرَاءٌ مِّمَّا تَعْبُدُونَ ۝ إِلَّا الَّذِي فَطَرَنِي فَإِنَّهُ سَيَهْدِينِ﴾',r:'سورة الزخرف: 26-27'}},
-   {t:'temple',p:'ابنِ البيت! اضغط الأركان بالترتيب',w:['الشهادتان','الصلاة','الزكاة','صوم رمضان','الحج'],proof:{h:1,t:'«بُنِيَ الإسلامُ على خمسٍ: شهادةِ أن لا إلهَ إلا اللهُ وأنَّ محمدًا رسولُ اللهِ، وإقامِ الصلاةِ، وإيتاءِ الزكاةِ، وصومِ رمضانَ، وحجِّ البيتِ»',r:'أخرجه البخاري (8)، ومسلم (16)، والترمذي (2609) واللفظ له'}},
-   {t:'verse',p:'رتّب الآية',w:['قُلْ','يَا أَيُّهَا','النَّاسُ','إِنِّي','رَسُولُ','اللَّهِ','إِلَيْكُمْ','جَمِيعًا'],proof:{t:'﴿قُلْ يَا أَيُّهَا النَّاسُ إِنِّي رَسُولُ اللَّهِ إِلَيْكُمْ جَمِيعًا﴾',r:'سورة الأعراف: 158'}},
-   {t:'mcq',p:'قال ﷺ: «يا غلام، سمِّ الله، وكُلْ بـ…»',o:['يمينك','يسارك'],a:0,proof:{h:1,t:'«يا غلامُ، سمِّ اللهَ، وكُلْ بيمينِك، وكُلْ ممّا يليك»',r:'أخرجه البخاري (5376)، ومسلم (2022)'}},
-   {t:'paper',p:'اكتب ثلاث طاعات نفعلها، وثلاث معاصٍ نتركها',sec:120,proof:{h:1,t:'الانقياد لله بالطاعة: فعل الطاعات مثل الصلاة وبر الوالدين، وترك المعاصي مثل الكذب والسرقة',r:'كتاب الدراسات الإسلامية، الدرس الثاني'}}
+   {bl:2,t:'mcq',p:'معنى «لا إله إلا الله»',o:['لا معبود بحق إلا الله','لا أحد في البيت','الله في السماء فقط'],a:0,proof:{t:'﴿شَهِدَ اللَّهُ أَنَّهُ لَا إِلَٰهَ إِلَّا هُوَ وَالْمَلَائِكَةُ وَأُولُو الْعِلْمِ قَائِمًا بِالْقِسْطِ ۚ لَا إِلَٰهَ إِلَّا هُوَ الْعَزِيزُ الْحَكِيمُ﴾',r:'سورة آل عمران: 18'}},
+   {bl:4,t:'sort',p:'نفي أم إثبات؟',bins:['نفي','إثبات'],items:[['لا إله','i'],['إلا الله','m'],['﴿إِنَّنِي بَرَاءٌ مِّمَّا تَعْبُدُونَ﴾','i'],['﴿إِلَّا الَّذِي فَطَرَنِي﴾','m']],proof:{t:'﴿وَإِذْ قَالَ إِبْرَاهِيمُ لِأَبِيهِ وَقَوْمِهِ إِنَّنِي بَرَاءٌ مِّمَّا تَعْبُدُونَ ۝ إِلَّا الَّذِي فَطَرَنِي فَإِنَّهُ سَيَهْدِينِ﴾',r:'سورة الزخرف: 26-27'}},
+   {bl:1,t:'temple',p:'ابنِ البيت! اضغط الأركان بالترتيب',w:['الشهادتان','الصلاة','الزكاة','صوم رمضان','الحج'],proof:{h:1,t:'«بُنِيَ الإسلامُ على خمسٍ: شهادةِ أن لا إلهَ إلا اللهُ وأنَّ محمدًا رسولُ اللهِ، وإقامِ الصلاةِ، وإيتاءِ الزكاةِ، وصومِ رمضانَ، وحجِّ البيتِ»',r:'أخرجه البخاري (8)، ومسلم (16)، والترمذي (2609) واللفظ له'}},
+   {bl:1,t:'verse',p:'رتّب الآية',w:['قُلْ','يَا أَيُّهَا','النَّاسُ','إِنِّي','رَسُولُ','اللَّهِ','إِلَيْكُمْ','جَمِيعًا'],proof:{t:'﴿قُلْ يَا أَيُّهَا النَّاسُ إِنِّي رَسُولُ اللَّهِ إِلَيْكُمْ جَمِيعًا﴾',r:'سورة الأعراف: 158'}},
+   {bl:1,t:'mcq',p:'قال ﷺ: «يا غلام، سمِّ الله، وكُلْ بـ…»',o:['يمينك','يسارك'],a:0,proof:{h:1,t:'«يا غلامُ، سمِّ اللهَ، وكُلْ بيمينِك، وكُلْ ممّا يليك»',r:'أخرجه البخاري (5376)، ومسلم (2022)'}},
+   {bl:6,t:'paper',p:'اكتب ثلاث طاعات نفعلها، وثلاث معاصٍ نتركها',sec:120,proof:{h:1,t:'الانقياد لله بالطاعة: فعل الطاعات مثل الصلاة وبر الوالدين، وترك المعاصي مثل الكذب والسرقة',r:'كتاب الدراسات الإسلامية، الدرس الثاني'}}
   ]},
  {id:3,name:'شجرة الإيمان',q:'ما الإيمان والإحسان؟',color:'var(--g3)',answer:'أؤمن بالأركان الستة وأعبد الله كأني أراه',
   ch:[
-   {t:'mcq',p:'كم أركان الإيمان؟',o:['٥','٦','٧'],a:1,proof:{h:1,t:'«أن تؤمنَ باللهِ، وملائكتِه، وكتبِه، ورسلِه، واليومِ الآخرِ، وتؤمنَ بالقدرِ خيرِه وشرِّه»',r:'أخرجه مسلم (8)'}},
-   {t:'order',p:'رتّب أركان الإيمان',w:['الله','الملائكة','الكتب','الرسل','اليوم الآخر','القدر'],proof:{h:1,t:'«أن تؤمنَ باللهِ، وملائكتِه، وكتبِه، ورسلِه، واليومِ الآخرِ، وتؤمنَ بالقدرِ خيرِه وشرِّه»',r:'أخرجه مسلم (8)'}},
-   {t:'sort',p:'من الملائكة أم من الكتب؟',bins:['الملائكة','الكتب'],items:[['جبريل','i'],['التوراة','m'],['ميكائيل','i'],['القرآن','m'],['الإنجيل','m']],proof:{t:'﴿وَلَٰكِنَّ الْبِرَّ مَنْ آمَنَ بِاللَّهِ وَالْيَوْمِ الْآخِرِ وَالْمَلَائِكَةِ وَالْكِتَابِ وَالنَّبِيِّينَ﴾',r:'سورة البقرة: 177'}},
-   {t:'verse',p:'رتّب الآية',w:['إِنَّا','كُلَّ','شَيْءٍ','خَلَقْنَاهُ','بِقَدَرٍ'],proof:{t:'﴿إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ﴾',r:'سورة القمر: 49'}},
-   {t:'mcq',p:'الإحسان هو…',o:['أن تعبد الله كأنك تراه','أن تنام مبكرًا','أن تلعب كثيرًا'],a:0,proof:{h:1,t:'«أن تعبدَ اللهَ كأنَّك تراه، فإنْ لم تكُنْ تراه فإنَّه يراك»',r:'أخرجه مسلم (8)'}},
-   {t:'paper',p:'ارسم شجرة لها ستة أغصان، واكتب على كل غصن ركنًا من أركان الإيمان',sec:120,proof:{h:1,t:'أركان الإيمان ستة: الإيمان بالله، وملائكته، وكتبه، ورسله، واليوم الآخر، والقدر خيره وشره',r:'كتاب الدراسات الإسلامية، الدرس الخامس'}},
-   {t:'act',p:'مثّل بلا كلام موقفًا فيه حسن خلق، والباقون يخمّنونه',sec:60,proof:{h:1,t:'«إنَّ من أحبِّكم إليَّ وأقربِكم منِّي مجلسًا يومَ القيامةِ أحسنَكم أخلاقًا»',r:'أخرجه الترمذي (2018)'}}
+   {bl:1,t:'mcq',p:'كم أركان الإيمان؟',o:['٥','٦','٧'],a:1,proof:{h:1,t:'«أن تؤمنَ باللهِ، وملائكتِه، وكتبِه، ورسلِه، واليومِ الآخرِ، وتؤمنَ بالقدرِ خيرِه وشرِّه»',r:'أخرجه مسلم (8)'}},
+   {bl:1,t:'order',p:'رتّب أركان الإيمان',w:['الله','الملائكة','الكتب','الرسل','اليوم الآخر','القدر'],proof:{h:1,t:'«أن تؤمنَ باللهِ، وملائكتِه، وكتبِه، ورسلِه، واليومِ الآخرِ، وتؤمنَ بالقدرِ خيرِه وشرِّه»',r:'أخرجه مسلم (8)'}},
+   {bl:4,t:'sort',p:'من الملائكة أم من الكتب؟',bins:['الملائكة','الكتب'],items:[['جبريل','i'],['التوراة','m'],['ميكائيل','i'],['القرآن','m'],['الإنجيل','m']],proof:{t:'﴿وَلَٰكِنَّ الْبِرَّ مَنْ آمَنَ بِاللَّهِ وَالْيَوْمِ الْآخِرِ وَالْمَلَائِكَةِ وَالْكِتَابِ وَالنَّبِيِّينَ﴾',r:'سورة البقرة: 177'}},
+   {bl:1,t:'verse',p:'رتّب الآية',w:['إِنَّا','كُلَّ','شَيْءٍ','خَلَقْنَاهُ','بِقَدَرٍ'],proof:{t:'﴿إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ﴾',r:'سورة القمر: 49'}},
+   {bl:2,t:'mcq',p:'الإحسان هو…',o:['أن تعبد الله كأنك تراه','أن تنام مبكرًا','أن تلعب كثيرًا'],a:0,proof:{h:1,t:'«أن تعبدَ اللهَ كأنَّك تراه، فإنْ لم تكُنْ تراه فإنَّه يراك»',r:'أخرجه مسلم (8)'}},
+   {bl:6,t:'paper',p:'ارسم شجرة لها ستة أغصان، واكتب على كل غصن ركنًا من أركان الإيمان',sec:120,proof:{h:1,t:'أركان الإيمان ستة: الإيمان بالله، وملائكته، وكتبه، ورسله، واليوم الآخر، والقدر خيره وشره',r:'كتاب الدراسات الإسلامية، الدرس الخامس'}},
+   {bl:3,t:'act',p:'مثّل بلا كلام موقفًا فيه حسن خلق، والباقون يخمّنونه',sec:60,proof:{h:1,t:'«إنَّ من أحبِّكم إليَّ وأقربِكم منِّي مجلسًا يومَ القيامةِ أحسنَكم أخلاقًا»',r:'أخرجه الترمذي (2018)'}}
   ]}
 ];
 const LIMIT={mcq:30,verse:60,order:60,temple:60,sort:60};
@@ -2683,7 +2698,7 @@ function runLevel(L,i){
   const finish=(correct)=>{
     if(closed)return;closed=true;tm.stop();
     const speed=correct>0?Math.ceil(5*tm.left()/sec):0;
-    const p=cur();p.c+=correct;p.sp+=speed;renderBar();
+    const p=cur();p.c+=correct;p.sp+=speed;addBl(p,c.bl,correct,10);renderBar();
     correct>0?sfx.ok():sfx.bad();
     body.querySelectorAll('button').forEach(b=>b.disabled=true);
     after.innerHTML=proofHTML(c.proof)+'<div class="result"><div class="gain"><span class="'+(correct?'ok':'no')+'">الصحة '+correct+'</span><span class="'+(speed?'ok':'no')+'">السرعة '+speed+'</span></div><button class="big" id="nx" type="button">التالي</button></div>';
@@ -2744,7 +2759,7 @@ function speed(i){
   wireWho();
   const opts=app.querySelectorAll('.opt');let closed=false;
   const end=(k)=>{if(closed)return;closed=true;tm.stop();opts.forEach(x=>x.disabled=true);opts[a].classList.add('right');
-    const p=cur();let c=0,sp=0;if(k===a){c=5;sp=Math.ceil(5*tm.left()/T);p.c+=c;p.sp+=sp;sfx.ok();}else{if(k>=0)opts[k].classList.add('wrong');sfx.bad();}
+    const p=cur();let c=0,sp=0;if(k===a){c=5;sp=Math.ceil(5*tm.left()/T);p.c+=c;p.sp+=sp;sfx.ok();}else{if(k>=0)opts[k].classList.add('wrong');sfx.bad();}addBl(p,1,c,5);
     renderBar();
     $('#after').innerHTML='<div class="result"><div class="gain"><span class="'+(c?'ok':'no')+'">الصحة '+c+'</span><span class="'+(sp?'ok':'no')+'">السرعة '+sp+'</span>'+(k<0?'<span class="no">انتهى الوقت</span>':'')+'</div><button class="big" id="nx" type="button">التالي</button></div>';
     $('#nx').focus();$('#nx').onclick=()=>{nextTurn();speed(i+1);};};
@@ -2762,8 +2777,8 @@ function finale(){
   clearInterval(tId);sfx.big();burst(220);setTimeout(()=>burst(160),900);renderBar();
   if(S.self){const p=S.players[0];
     app.innerHTML='<section class="screen story"><div class="cert">'+LOGO.replace('class="logo"','class="logo sm"')+'<span class="small">مسابقة فانوس خامس · '+esc(S.self.gid)+'</span><div class="champ">'+esc(p.n)+'</div><p>الصحة '+p.c+' · السرعة '+p.sp+'</p><p class="small">أعطِ معلمك اسمك وهذا الرمز</p><div class="code">'+makeCode(S.self.gid,p.c,p.sp)+'</div>'+
-     '<div class="answers"><div style="background:var(--g1)">الإسلام</div><div style="background:var(--g2)">الإيمان</div><div style="background:var(--g3)">الإحسان</div></div><p class="small">من إعداد الأستاذ سعد أبونيان</p></div></section>';
-    return;}
+     '<div class="answers"><div style="background:var(--g1)">الإسلام</div><div style="background:var(--g2)">الإيمان</div><div style="background:var(--g3)">الإحسان</div></div><p class="small">من إعداد الأستاذ سعد أبونيان</p></div><div id="rankBox"></div></section>';
+    fanoosRank(p);return;}
   const best=Math.max(...S.players.map(total));const winners=S.players.filter(p=>total(p)===best);
   app.innerHTML='<section class="screen story"><div class="cert">'+ART[4]+'<span class="small">مسابقة فانوس خامس · شهادة أبطال معرفة الدين</span><div class="champ">'+winners.map(p=>esc(p.n)).join(' و ')+'</div><p>'+best+' نقطة</p>'+
    '<div class="answers"><div style="background:var(--g1)">الإسلام</div><div style="background:var(--g2)">الإيمان</div><div style="background:var(--g3)">الإحسان</div></div>'+scoreTable()+
@@ -2905,16 +2920,17 @@ function pushBoard(force){if(!hostR)return;const now=Date.now();if(!force&&now-b
 const pad=(n,w)=>String(Math.max(0,Math.min(10**w-1,n|0))).padStart(w,'0');
 function ck(g,c,sp){let h=2166136261;for(const ch of g+'|'+c+'|'+sp+'|fanoos'){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)>>>0;}return h%100;}
 function makeCode(g,c,sp){const d=pad(c,3)+pad(sp,3)+pad(ck(g,c,sp),2);return d.slice(0,4)+' '+d.slice(4);}
-function readCode(d){if(!/^\d{8}$/.test(d))return null;const c=+d.slice(0,3),sp=+d.slice(3,6),k=+d.slice(6);return ck(S.gid,c,sp)===k?{c,sp}:null;}
-function startSelf(g,n){S={...S,self:{gid:g,name:n},mode:'solo',players:[newP(n,0)],turn:0,done:[],reg:[],gid:g};
+function readCode(d){if(!/^\d{8}$/.test(d))return null;const c=+d.slice(0,3),sp=+d.slice(3,6),k=+d.slice(6);const n=LEVELS.reduce((a,L)=>a+L.ch.filter(x=>x.t!=='paper'&&x.t!=='act').length,0);if(c>10*n+5*SPEED.length||sp>5*(n+SPEED.length)||(c===0&&sp>0))return null;return ck(S.gid,c,sp)===k?{c,sp}:null;}
+function startSelf(g,n){S={...S,self:{gid:g,name:n},mode:'solo',players:[{...newP(n,0),b:0}],turn:0,done:[],reg:[],gid:g};
   ['bBeh','bTidy','bCodes'].forEach(id=>$('#'+id).hidden=true);sfx.win();renderBar();map();}
 function studentJoin(gid){
   clearInterval(tId);$('#bar').hidden=true;panel.innerHTML='';
   app.innerHTML='<section class="screen hero">'+LOGO.replace('class="logo"','class="logo sm"')+LANTERN+'<h1>فانوس خامس ٣</h1><div class="join">'+
    '<label class="small" for="jg">رقم المسابقة</label><input id="jg" inputmode="numeric" maxlength="4" value="'+esc(gid)+'">'+
    '<label class="small" for="jn">اسمك</label><input id="jn" maxlength="22" autocomplete="off">'+
-   '<button class="big" id="jgo" type="button">ابدأ</button><p class="small" id="jmsg"></p></div></section>';
+   '<button class="big" id="jgo" type="button">ابدأ</button><button class="tbtn" id="jlb" type="button"'+(API()?'':' hidden')+'>🏆 الترتيب</button><p class="small" id="jmsg"></p></div></section>';
   (gid?$('#jn'):$('#jg')).focus();
+  $('#jlb').onclick=()=>{const g=$('#jg').value.trim();if(/^\d{4}$/.test(g))boardScreen(g);else $('#jmsg').textContent='اكتب رقم المسابقة المكوّن من ٤ أرقام';};
   $('#jgo').onclick=async()=>{
     const g=$('#jg').value.trim(),n=$('#jn').value.trim();const msg=$('#jmsg');
     if(!/^\d{4}$/.test(g)){msg.textContent='اكتب رقم المسابقة المكوّن من ٤ أرقام';return;}
@@ -2933,6 +2949,36 @@ function studentJoin(gid){
 const hashGid=(location.hash||'').slice(1);
 const boot=d=>{return studentJoin(/^\d{4}$/.test(hashGid)?hashGid:GID);if(d&&d.players){S=d;S.noiseOn=false;S.reg=S.reg||[];S.gid=GID;renderBar();map();hostRoom();}else setup();};
 window.claude?.hot?.ready?window.claude.hot.ready(boot):boot(window.claude?.hot?.data??{});
+/* ---------- class ranking: solo results go to the teacher's Google Sheet (FANOOS_API, set in fanoos-config.js) ---------- */
+function addBl(p,l,got,max){if(!l)return;p.bl=p.bl||{};const r=p.bl[l]||(p.bl[l]=[0,0]);r[0]+=got;r[1]+=max;}
+function API(){return typeof window.FANOOS_API==='string'?window.FANOOS_API.trim():'';}
+function api(params){return new Promise((res,rej)=>{const u=API();if(!u)return rej(new Error('off'));
+  const cb='fz'+Date.now()+Math.floor(Math.random()*1e4),s=document.createElement('script');
+  const done=()=>{clearTimeout(t);delete window[cb];s.remove();};const t=setTimeout(()=>{done();rej(new Error('timeout'));},20000);
+  window[cb]=d=>{done();d&&d.ok?res(d):rej(new Error('api'));};s.onerror=()=>{done();rej(new Error('net'));};
+  s.src=u+(u.includes('?')?'&':'?')+new URLSearchParams({...params,cb});document.head.appendChild(s);});}
+function normName(n){return String(n).replace(/\s+/g,' ').trim();}
+// best attempt per name, then competition ranking (ties share a place)
+function rankRows(rows){const best={};
+  rows.forEach(r=>{const n=normName(r.n),t=(+r.c||0)+(+r.sp||0);if(!n)return;const o=best[n];if(!o||t>o.t||(t===o.t&&+r.c>o.c))best[n]={n,t,c:+r.c||0};});
+  const out=Object.values(best).sort((a,b)=>b.t-a.t||b.c-a.c);out.forEach((r,i)=>r.k=i&&r.t===out[i-1].t?out[i-1].k:i+1);return out;}
+function MEDAL(k){return k===1?'🥇':k===2?'🥈':k===3?'🥉':'🏅';}
+function boardHTML(list,me){const m=list.find(r=>r.n===normName(me||''));
+  return (m?'<div class="myrank"><span class="md">'+MEDAL(m.k)+'</span><span class="rn">'+m.k+'</span><span class="of">من '+list.length+'</span></div>':'')+
+   '<ol class="lb">'+list.map(r=>'<li'+(m&&r===m?' class="me"':'')+'><span class="k">'+(r.k<4?MEDAL(r.k):r.k)+'</span><span class="n">'+esc(r.n)+'</span><span class="s">'+r.t+'</span></li>').join('')+'</ol>'+
+   '<button class="tbtn" id="rkR" type="button">↻ تحديث</button>';}
+async function showBoard(box,gid,me,add){
+  if(!box||!API())return;box.innerHTML='<h3>ترتيب الصف</h3><p class="small">…</p>';
+  try{const d=await api(add?{a:'add',gid,...add}:{a:'list',gid});if(add&&S.self)S.self.sent=true,save();
+    if(!box.isConnected)return;box.innerHTML='<h3>ترتيب الصف</h3>'+boardHTML(rankRows(d.rows||[]),me);
+    const m=rankRows(d.rows||[]).find(r=>r.n===normName(me||''));if(m&&m.k<=3)burst(120);}
+  catch(e){if(box.isConnected)box.innerHTML='<h3>ترتيب الصف</h3><p class="small">تعذر الاتصال</p><button class="tbtn" id="rkR" type="button">↻ حاول مرة أخرى</button>';}
+  const r=$('#rkR');if(r)r.onclick=()=>showBoard(box,gid,me,S.self&&!S.self.sent?add:null);}
+function fanoosRank(p){const box=$('#rankBox');if(!box||!API())return;box.className='rank';
+  showBoard(box,S.self.gid,p.n,S.self.sent?null:{name:normName(p.n),c:p.c,sp:p.sp,bl:JSON.stringify(p.bl||{})});}
+function boardScreen(gid){clearInterval(tId);$('#bar').hidden=true;panel.innerHTML='';
+  app.innerHTML='<section class="screen story"><div id="rankBox" class="rank"></div><button class="big alt" id="rkBack" type="button">رجوع</button></section>';
+  $('#rkBack').onclick=()=>studentJoin(gid);showBoard($('#rankBox'),gid,'',null);}
 })();
 </script>
 </body></html>

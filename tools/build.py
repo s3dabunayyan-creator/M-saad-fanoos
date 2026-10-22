@@ -17,6 +17,7 @@ GAMES = [  # src, repo slug, sorted name
  ('fanoos3', 'khamis3', 'خامس ٣ - معرفة الدين'),
  ('fanoos4', 'khamis4', 'خامس ٤ - الخوف والرجاء والتوكل'),
  ('fanoos5', 'khamis5', 'خامس ٥ - الخشوع والإنابة والذبح لله'),
+ ('fanoos6', 'khamis6', 'خامس ٦ - هديه ﷺ في الطهارة والصلاة'),
  ('fanoosT1', 'thalith1', 'ثالث ١ - الإيمان'),
  ('fanoosT2', 'thalith2', 'ثالث ٢ - أركان الإسلام'),
  ('fanoosT3', 'thalith3', 'ثالث ٣ - الإحسان'),
@@ -94,7 +95,7 @@ def main():
         h = z[:-4] + '.html'
         with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
             zf.write(h, os.path.basename(h))
-    for gid, src in (('3104', 'fanoosT4'), ('5105', 'fanoos5')):
+    for gid, src in (('3104', 'fanoosT4'), ('5105', 'fanoos5'), ('5106', 'fanoos6')):
         h = '%s/send/fanoos%s.html' % (LES, gid)
         shutil.copyfile('%s/student/%s-student.html' % (LES, src), h)
         with zipfile.ZipFile(h[:-5] + '.zip', 'w', zipfile.ZIP_DEFLATED) as zf:

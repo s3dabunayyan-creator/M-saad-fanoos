@@ -84,6 +84,7 @@ tbody tr:hover td:first-child{text-decoration:underline}
         </optgroup>
       </select>
       <button class="btn" id="reload" type="button">↻ تحديث</button>
+      <button class="btn alt" id="xls" type="button">⬇ تنزيل Excel</button>
     </div>
   </div>
 
@@ -195,6 +196,13 @@ async function load(){
 try{const g=localStorage.getItem('fanoosDashGame');if(g&&$('#game').querySelector('option[value="'+g+'"]'))$('#game').value=g;}catch(e){}
 $('#game').onchange=()=>{SEL=null;try{localStorage.setItem('fanoosDashGame',$('#game').value);}catch(e){}load();};
 $('#reload').onclick=load;
+// a CSV with a BOM opens in Excel with Arabic intact
+$('#xls').onclick=()=>{const list=students(DATA);if(!list.length)return;
+  const q=v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const head=['الطالب','الترتيب','الصحة','السرعة','النقاط',...BLOOM.map(b=>b+' %'),'التمكن %'];
+  const lines=[head,...list.map(s=>[s.n,s.k,s.c,s.sp,s.t,...s.lv,s.m])].map(r=>r.map(q).join(','));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='fanoos-'+$('#game').value+'.csv';document.body.appendChild(a);a.click();a.remove();};
 load();
 })();
 </script>

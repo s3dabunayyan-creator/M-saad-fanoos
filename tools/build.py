@@ -65,6 +65,35 @@ def patch_teacher(s):
     s = s[:k] + CONFIG_TAG + s[k:]
     return s
 
+BRAND = '/* school brand join screen */'
+BRAND_CSS = BRAND + """
+.brand{gap:16px;padding-block:6px 20px}
+.crest{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--deep);border:2px solid var(--gold);border-radius:26px;padding:14px 20px;box-shadow:0 8px 0 #00292C}
+.crest .logo{width:min(170px,42vw)}
+.crest .tag{display:flex;flex-direction:column;align-items:center;gap:2px}
+.crest .tag .lantern{width:54px;height:54px}
+.crest .tag b{font-family:var(--f-display);font-weight:400;font-size:1.25rem;color:var(--gold);line-height:1.2}
+.brand h1{font-size:clamp(2.2rem,8vw,3.6rem)}
+.brand .lesson{font-family:var(--f-display);font-size:clamp(1.3rem,5vw,1.8rem);line-height:1.35;color:var(--ink);margin-top:-8px}
+.brand .join{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:18px}
+.brand .credit{border-top:2px solid var(--gold);padding-top:8px}
+"""
+
+def brand(s):
+    """Join screen in the school's identity: logo band, lesson title, framed form, teacher credit."""
+    if BRAND in s:
+        return s
+    t = re.search(r'<h1>(فانوس [^<]*)</h1><p class="big-q" style="font-size:1.8rem">([^<]*)</p>', s)
+    head = ("app.innerHTML='<section class=\"screen hero brand\"><header class=\"crest\">'+LOGO+"
+            "'<div class=\"tag\">'+LANTERN+'<b>مسابقة فانوس</b></div></header><h1>%s</h1><p class=\"lesson\">%s</p><div class=\"join\">'"
+            % (t.group(1), t.group(2)))
+    s = sub1("app.innerHTML='<section class=\"screen hero\">'+LOGO.replace('class=\"logo\"','class=\"logo sm\"')+LANTERN+'<h1>%s</h1><div class=\"join\">'" % t.group(1), head, s)
+    i = s.index(head)
+    j = s.index("</section>';", i)
+    s = s[:j] + "<p class=\"small credit\">من إعداد الأستاذ سعد أبونيان</p>" + s[j:]
+    k = s.index('</style>')
+    return s[:k] + BRAND_CSS + s[k:]
+
 def student(s, page_url=None):
     s = re.sub(r'<title>(فانوس [^<]*)</title>', r'<title>الطالب · \1</title>', s, count=1)
     s = sub1('function setup(){\n', 'function setup(){return studentJoin(GID);\n', s)
@@ -82,7 +111,7 @@ def main():
     srt = LES + '/فانوس-مرتبة'
     for src, slug, name in GAMES:
         tp = '%s/%s.html' % (LES, src)
-        t = patch_teacher(open(tp, encoding='utf-8').read())
+        t = brand(patch_teacher(open(tp, encoding='utf-8').read()))
         open(tp, 'w', encoding='utf-8').write(t)
         st = student(t)
         open('%s/student/%s-student.html' % (LES, src), 'w', encoding='utf-8').write(st)

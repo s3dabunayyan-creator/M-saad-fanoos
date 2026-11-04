@@ -1,7 +1,10 @@
 // نتائج فانوس: يحفظ نتيجة كل طالب في هذا الجدول، ويعيد نتائج المسابقة للترتيب ولوحة المعلم.
+// ورقة «الطلاب»: اكتب اسم الطالب في العمود B فيظهر رقمه الخاص في العمود A تلقائيًا.
 const SHEET_NAME = 'النتائج';
+const ROSTER = 'الطلاب';
 const LEVELS = ['تذكر', 'فهم', 'تطبيق', 'تحليل', 'تقييم', 'إبداع'];
-const HEAD = ['الوقت', 'رقم المسابقة', 'الاسم', 'الصحة', 'السرعة', 'المجموع'].concat(LEVELS.map(function (l) { return l + ' %'; }), ['تفاصيل']);
+const HEAD = ['الوقت', 'رقم المسابقة', 'الاسم', 'الصحة', 'السرعة', 'المجموع'].concat(LEVELS.map(function (l) { return l + ' %'; }), ['تفاصيل', 'رقم الطالب']);
+const ID_COL = 13; // 0-based column of «رقم الطالب» in النتائج
 
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -15,12 +18,84 @@ function sheet_() {
   return sh;
 }
 
+function roster_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(ROSTER);
+  if (!sh) {
+    sh = ss.insertSheet(ROSTER);
+    sh.appendRow(['رقم الطالب', 'اسم الطالب', 'الصف']);
+    sh.setFrozenRows(1);
+    sh.setRightToLeft(true);
+  }
+  return sh;
+}
+
+function digits_(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+function clean_(v) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim(); }
+
+// gives every named student without a number a random, unused 4-digit number
+function fillIds_(sh) {
+  const v = sh.getDataRange().getValues();
+  const used = {};
+  v.forEach(function (r) { const d = digits_(r[0]); if (d) used[d] = 1; });
+  let changed = false;
+  const col = v.slice(1).map(function (r) {
+    if (clean_(r[1]) && !digits_(r[0])) {
+      let id;
+      do { id = String(1000 + Math.floor(Math.random() * 9000)); } while (used[id]);
+      used[id] = 1; changed = true;
+      return [id];
+    }
+    return [r[0]];
+  });
+  if (changed && col.length) sh.getRange(2, 1, col.length, 1).setValues(col);
+}
+
+function onEdit(e) {
+  if (e && e.range && e.range.getSheet().getName() === ROSTER) fillIds_(e.range.getSheet());
+}
+
+function onOpen() {
+  fillIds_(roster_());
+  SpreadsheetApp.getUi().createMenu('فانوس').addItem('أعطِ كل طالب رقمًا', 'giveIds').addToUi();
+}
+
+function giveIds() { fillIds_(roster_()); }
+
+// id -> name, and name -> id (only when the name is unique), from the الطلاب sheet
+function students_() {
+  const byId = {}, byName = {};
+  roster_().getDataRange().getValues().slice(1).forEach(function (r) {
+    const id = digits_(r[0]), n = clean_(r[1]);
+    if (!id || !n) return;
+    if (!byId[id]) byId[id] = n;
+    byName[n] = byName[n] === undefined ? id : null;
+  });
+  return { byId: byId, byName: byName };
+}
+
+// a stable key for a student that does not reveal their number
+function key_(id) {
+  const pr = PropertiesService.getScriptProperties();
+  let salt = pr.getProperty('salt');
+  if (!salt) { salt = Utilities.getUuid(); pr.setProperty('salt', salt); }
+  const b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + id);
+  return 's' + b.slice(0, 6).map(function (x) { return ('0' + (x & 255).toString(16)).slice(-2); }).join('');
+}
+
+function who_(p) {
+  const id = digits_(p.id);
+  const n = id && students_().byId[id];
+  return n ? { k: key_(id), n: n } : null;
+}
+
 function num_(v, max) { v = Math.round(Number(v) || 0); return Math.max(0, Math.min(max, v)); }
 
 function add_(p) {
   const gid = String(p.gid || '').replace(/\D/g, '');
   if (gid.length !== 4) throw new Error('gid');
-  let name = String(p.name || '').replace(/\s+/g, ' ').trim().slice(0, 22);
+  const id = digits_(p.id).slice(0, 12);
+  let name = (id && students_().byId[id]) || clean_(p.name).slice(0, 22);
   if (!name) throw new Error('name');
   if (/^[=+\-@]/.test(name)) name = ' ' + name;
   const c = num_(p.c, 999), sp = num_(p.sp, 999);
@@ -38,16 +113,25 @@ function add_(p) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    sheet_().appendRow([new Date(), gid, name, c, sp, c + sp].concat(pct, [JSON.stringify(clean)]));
+    const sh = sheet_();
+    if (sh.getRange(1, ID_COL + 1).getValue() === '') sh.getRange(1, ID_COL + 1).setValue(HEAD[ID_COL]);
+    sh.appendRow([new Date(), gid, name, c, sp, c + sp].concat(pct, [JSON.stringify(clean), id]));
   } finally { lock.releaseLock(); }
 }
 
 function list_(gid) {
   const v = sheet_().getDataRange().getValues().slice(1);
+  const st = students_(), keys = {};
+  const keyOf = function (id) { return keys[id] || (keys[id] = key_(id)); };
   return v.filter(function (r) { return r[2] !== '' && String(r[1]).indexOf(gid) === 0; }).map(function (r) {
     let bl = {};
     try { bl = JSON.parse(r[12] || '{}'); } catch (e) {}
-    return { g: String(r[1]), n: String(r[2]).trim(), c: Number(r[3]) || 0, sp: Number(r[4]) || 0, bl: bl, ts: r[0] instanceof Date ? r[0].getTime() : 0 };
+    const n = clean_(r[2]);
+    // results saved before student numbers existed join the student with the same name
+    const id = digits_(r[ID_COL]) || st.byName[n] || '';
+    const o = { g: String(r[1]), n: (id && st.byId[id]) || n, c: Number(r[3]) || 0, sp: Number(r[4]) || 0, bl: bl, ts: r[0] instanceof Date ? r[0].getTime() : 0 };
+    if (id) o.k = keyOf(id);
+    return o;
   });
 }
 
@@ -55,8 +139,11 @@ function doGet(e) {
   const p = (e && e.parameter) || {};
   let out;
   try {
-    if (p.a === 'add') add_(p);
-    out = { ok: true, rows: list_(String(p.gid || '').replace(/\D/g, '')) };
+    if (p.a === 'who') out = { ok: true, st: who_(p) };
+    else {
+      if (p.a === 'add') add_(p);
+      out = { ok: true, rows: list_(String(p.gid || '').replace(/\D/g, '')) };
+    }
   } catch (err) {
     out = { ok: false, error: String(err && err.message || err) };
   }

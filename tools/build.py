@@ -96,6 +96,33 @@ def brand(s):
     k = s.index('</style>')
     return s[:k] + BRAND_CSS + s[k:]
 
+JS_START = '/* ---------- class ranking:'
+ID_MARK = "S.self.k=sid.k"
+
+def sync_rank(s):
+    """Keep the ranking code and style embedded in a game in step with tools/rank.js and rank.css."""
+    i = s.index(JS_START)
+    j = s.index('})();\n</script>', i)
+    s = s[:i] + JS[JS.index(JS_START):] + s[j:]
+    i = s.index(MARK)
+    j = s.index(BRAND, i)
+    return s[:i] + CSS + s[j:]
+
+def student_ids(s):
+    """Join screen asks for the student's number (remembered on the device) instead of a free-text name."""
+    if ID_MARK in s:
+        return s
+    s = sub1(''''<label class="small" for="jn">اسمك</label><input id="jn" maxlength="22" autocomplete="off">'+''',
+             '''(API()?idField():'')+'<div class="join" id="jnw" style="padding:0;border:0;background:none"'+(API()?' hidden':'')+'><label class="small" for="jn">اسمك</label><input id="jn" maxlength="22" autocomplete="off"></div>'+''', s)
+    s = sub1("(gid?$('#jn'):$('#jg')).focus();",
+             "(gid?$(API()?'#ji':'#jn'):$('#jg')).focus();idWire();", s)
+    s = sub1("const g=$('#jg').value.trim(),n=$('#jn').value.trim();const msg=$('#jmsg');",
+             "const g=$('#jg').value.trim(),msg=$('#jmsg');let n=$('#jn').value.trim(),sid=null;", s)
+    s = sub1("if(!n){msg.textContent='اكتب اسمك';return;}\n    startSelf(g,n);",
+             "if(API()&&$('#jnw').hidden){sid=await whoAmI(msg,$('#jgo'));if(!sid)return;\n      if(sid.old){sid=null;$('#jnw').hidden=false;$('#jn').focus();msg.textContent='اكتب اسمك';return;}n=sid.n;}\n"
+             "    if(!n){msg.textContent='اكتب اسمك';return;}\n    startSelf(g,n);if(sid){S.self.id=sid.id;S.self.k=sid.k;save();}", s)
+    return s
+
 def student(s, page_url=None):
     s = re.sub(r'<title>(فانوس [^<]*)</title>', r'<title>الطالب · \1</title>', s, count=1)
     s = sub1('function setup(){\n', 'function setup(){return studentJoin(GID);\n', s)
@@ -113,7 +140,7 @@ def main():
     srt = LES + '/فانوس-مرتبة'
     for src, slug, name in GAMES:
         tp = '%s/%s.html' % (LES, src)
-        t = brand(patch_teacher(open(tp, encoding='utf-8').read()))
+        t = student_ids(sync_rank(brand(patch_teacher(open(tp, encoding='utf-8').read()))))
         open(tp, 'w', encoding='utf-8').write(t)
         st = student(t)
         open('%s/student/%s-student.html' % (LES, src), 'w', encoding='utf-8').write(st)

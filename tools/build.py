@@ -123,6 +123,45 @@ def student_ids(s):
              "    if(!n){msg.textContent='اكتب اسمك';return;}\n    startSelf(g,n);if(sid){S.self.id=sid.id;S.self.k=sid.k;save();}", s)
     return s
 
+QR = '/* QR for every game */'
+QR_CSS = QR + """
+.qrov{position:fixed;inset:0;z-index:999;background:rgba(0,30,32,.92);display:grid;place-items:center;padding:16px}
+.qrbox{background:#fff;color:#003C40;border-radius:24px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:520px;text-align:center}
+.qrbox b{font-size:1.4rem}
+.qrbig{width:min(78vw,58vh,420px);aspect-ratio:1}
+.qrbig svg{width:100%;height:100%;display:block}
+.qrbox .qrg{font-size:1.6rem;font-weight:700}
+.qrbox .qrl{direction:ltr;word-break:break-all;color:#003C40}
+"""
+QR_JS = QR + """
+function qrScreen(g){g=/^\\d{4}$/.test(g||'')?g:'';const link=PAGE_URL+(g?'#'+g:'');
+  const d=document.createElement('div');d.className='qrov';d.setAttribute('role','dialog');d.setAttribute('aria-label','رمز QR للمسابقة');
+  d.innerHTML='<div class="qrbox"><b>'+esc(document.title.replace(/^الطالب · /,''))+'</b><div class="qrbig"></div>'+(g?'<span class="qrg">رقم المسابقة '+esc(g)+'</span>':'')+'<p class="small qrl">'+esc(link)+'</p><button class="big" type="button">إغلاق</button></div>';
+  document.body.appendChild(d);
+  try{const q=qrcode(0,'M');q.addData(link);q.make();d.querySelector('.qrbig').innerHTML=q.createSvgTag({cellSize:8,margin:2,scalable:true});}catch(e){d.querySelector('.qrbig').textContent='افتح الرابط';}
+  d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};}
+"""
+
+def add_qr(s):
+    """A QR button on every game's join screen (big code to show the class); ?qr opens it straight away."""
+    if QR in s:
+        return s
+    s = sub1('🏆 الترتيب</button><p class="small" id="jmsg">',
+             '🏆 الترتيب</button><button class="tbtn" id="jqr" type="button">📱 رمز QR</button><p class="small" id="jmsg">', s)
+    s = sub1("  $('#jlb').onclick=",
+             "  $('#jqr').onclick=()=>qrScreen($('#jg').value.trim());\n"
+             "  if(/[?&]qr\\b/.test(location.search)&&!window.__qrOnce){window.__qrOnce=1;setTimeout(()=>qrScreen(gid),0);}\n"
+             "  $('#jlb').onclick=", s)
+    s = sub1('function drawQR(){', QR_JS + 'function drawQR(){', s)
+    k = s.index('</style>')
+    return s[:k] + QR_CSS + s[k:]
+
+def public_url(s, url):
+    """Teacher copies share the public GitHub Pages link too (students can't open Claude artifact links)."""
+    s, n = re.subn(r"const PAGE_URL='[^']*';", "const PAGE_URL='%s';" % url, s)
+    assert n == 1
+    return s
+
 def student(s, page_url=None):
     s = re.sub(r'<title>(فانوس [^<]*)</title>', r'<title>الطالب · \1</title>', s, count=1)
     s = sub1('function setup(){\n', 'function setup(){return studentJoin(GID);\n', s)
@@ -140,7 +179,7 @@ def main():
     srt = LES + '/فانوس-مرتبة'
     for src, slug, name in GAMES:
         tp = '%s/%s.html' % (LES, src)
-        t = student_ids(sync_rank(brand(patch_teacher(open(tp, encoding='utf-8').read()))))
+        t = public_url(add_qr(student_ids(sync_rank(brand(patch_teacher(open(tp, encoding='utf-8').read()))))), BASE + slug + '.html')
         open(tp, 'w', encoding='utf-8').write(t)
         st = student(t)
         open('%s/student/%s-student.html' % (LES, src), 'w', encoding='utf-8').write(st)

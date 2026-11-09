@@ -21,6 +21,8 @@ h1,h2{font-family:var(--f-display);font-weight:400;margin:0;line-height:1.3}
 h1{color:var(--brand);font-size:2.2rem}
 h2{font-size:1.5rem}
 .small{font-size:.85rem;color:var(--muted)}
+#note{margin:0 0 10px;padding:8px 14px;border-radius:12px;background:#fff3d6;color:#6b4700;font-size:.9rem}
+#note.ok{background:#e3f6e3;color:#0a5a0a}
 .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 select,button{font:inherit}
@@ -54,6 +56,8 @@ td{padding:6px 8px;text-align:center;border-radius:6px;font-variant-numeric:tabu
 td.na{color:#9aaaaa;background:#f5f7f7}
 tr.avg td{font-weight:700;border-top:2px solid var(--ink)}
 tbody tr{cursor:pointer}
+tbody tr.nohover{cursor:default}
+tbody tr.nohover:hover td:first-child{text-decoration:none}
 tbody tr:hover td:first-child{text-decoration:underline}
 .band{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;font-weight:700;border-radius:99px;padding:1px 8px;white-space:nowrap}
 .b3{background:#e3f6e3;color:#0a6e0a}.b2{background:#fff3d6;color:#8a5a00}.b1{background:#fde6e6;color:#a42a2a}
@@ -64,7 +68,7 @@ tbody tr:hover td:first-child{text-decoration:underline}
 <body>
 <div class="wrap">
   <div class="top">
-    <div><h1>🏮 لوحة المعلم</h1><p class="small">نتائج الطلاب الذين لعبوا فانوس فرديًا، ودرجة تمكّنهم على هرم بلوم</p></div>
+    <div><h1>🏮 لوحة المعلم</h1><p class="small">نتائج الطلاب الذين لعبوا فانوس فرديًا، ودرجة تمكّنهم على هرم بلوم. اختر «كل ألعاب الخامس» أو «الثالث» لترى تقييمات كل طالب متراكمة، واضغط اسمه لترى سجله.</p></div>
     <div class="ctl">
       <select id="game" aria-label="المسابقة">
         <optgroup label="الصف الخامس">
@@ -91,6 +95,7 @@ tbody tr:hover td:first-child{text-decoration:underline}
     </div>
   </div>
 
+  <p id="note" hidden></p>
   <div id="out"><div class="card msg">جارٍ التحميل…</div></div>
 </div>
 <div id="tip" hidden></div>
@@ -109,21 +114,27 @@ const inkOn=p=>p!=null&&p>=50?'#fff':'#0f2a2b';
 const band=p=>p==null?'':p>=85?'<span class="band b3">✓ متمكن</span>':p>=65?'<span class="band b2">≈ قريب</span>':'<span class="band b1">! يحتاج دعم</span>';
 const pct=r=>r&&r[1]>0?Math.round(100*r[0]/r[1]):null;
 
-function api(params){return new Promise((res,rej)=>{const u=API();if(!u)return rej(new Error('off'));
+function api1(params){return new Promise((res,rej)=>{const u=API();if(!u)return rej(new Error('off'));
   const cb='fz'+Date.now()+Math.floor(Math.random()*1e4),s=document.createElement('script');
-  const done=()=>{clearTimeout(t);delete window[cb];s.remove();};const t=setTimeout(()=>{done();rej(new Error('timeout'));},20000);
+  const done=()=>{clearTimeout(t);window[cb]=()=>{};s.remove();};const t=setTimeout(()=>{done();rej(new Error('timeout'));},30000);
   window[cb]=d=>{done();d&&d.ok?res(d):rej(new Error((d&&d.error)||'api'));};s.onerror=()=>{done();rej(new Error('net'));};
   s.src=u+(u.includes('?')?'&':'?')+new URLSearchParams({...params,cb});document.head.appendChild(s);});}
+// Google's script is sometimes slow to wake up or busy saving students' results: try again before giving up
+async function api(params,onRetry){let err;for(let i=0;i<4;i++){
+  try{return await api1(params);}catch(e){err=e;if(e.message==='off')break;if(i<3){onRetry&&onRetry(i+1);await new Promise(r=>setTimeout(r,[2000,5000,10000][i]));}}}throw err;}
 
 const norm=n=>String(n).replace(/\s+/g,' ').trim();
 // one row per student: their best attempt in each game, summed across the games shown
 function students(rows){
   const best={};
-  rows.forEach(r=>{const n=norm(r.n);if(!n)return;const k=n+'|'+r.g,t=r.c+r.sp,o=best[k];
-    if(!o||t>o.c+o.sp||(t===o.c+o.sp&&r.c>o.c))best[k]={...r,n};});
+  // a student is their number when they have one (r.k), otherwise their typed name
+  const tries={},last={};
+  rows.forEach(r=>{const n=norm(r.n);if(!n)return;const id=r.k||'n:'+n,k=id+'|'+r.g,t=r.c+r.sp,o=best[k];
+    tries[k]=(tries[k]||0)+1;if(r.ts>=(last[id]?last[id].ts:-1))last[id]={ts:r.ts,n};
+    if(!o||t>o.c+o.sp||(t===o.c+o.sp&&r.c>o.c))best[k]={...r,n,id};});
   const by={};
-  Object.values(best).forEach(r=>{const s=by[r.n]||(by[r.n]={n:r.n,c:0,sp:0,games:0,bl:{}});
-    s.c+=r.c;s.sp+=r.sp;s.games++;
+  Object.values(best).forEach(r=>{const s=by[r.id]||(by[r.id]={id:r.id,n:last[r.id].n,c:0,sp:0,games:0,bl:{},hist:[]});
+    s.c+=r.c;s.sp+=r.sp;s.games++;s.hist.push({g:r.g,t:r.c+r.sp,m:mastery(r.bl),tries:tries[r.id+'|'+r.g],ts:r.ts});
     for(const l in r.bl){const a=r.bl[l];if(!Array.isArray(a))continue;const b=s.bl[l]||(s.bl[l]=[0,0]);b[0]+=+a[0]||0;b[1]+=+a[1]||0;}});
   const list=Object.values(by);
   list.forEach(s=>{s.t=s.c+s.sp;let g=0,m=0;for(const l in s.bl){g+=s.bl[l][0];m+=s.bl[l][1];}s.m=m?Math.round(100*g/m):null;
@@ -133,6 +144,13 @@ function students(rows){
   return list;
 }
 // class level = mean of the students measured on that level
+function mastery(bl){let g=0,m=0;for(const l in bl){const a=bl[l];if(Array.isArray(a)){g+=+a[0]||0;m+=+a[1]||0;}}return m?Math.round(100*g/m):null;}
+const gameName=g=>{const o=$('#game option[value="'+g+'"]');return o?o.textContent:g;};
+// the selected student's record across the games shown
+function history(sel){const h=[...sel.hist].sort((a,b)=>a.g.localeCompare(b.g));
+  return '<div class="card"><h2>سجل '+esc(sel.n)+'</h2><p class="small">'+sel.games+' '+(sel.games===1?'لعبة':'ألعاب')+' · أفضل محاولة في كل لعبة</p><div class="tablewrap"><table><thead><tr><th>اللعبة</th><th>النقاط</th><th>التمكن</th><th>المحاولات</th><th>آخر مرة</th></tr></thead><tbody>'+
+    h.map(x=>'<tr class="nohover"><td>'+esc(gameName(x.g))+'</td><td>'+x.t+'</td>'+cell(x.m)+'<td>'+x.tries+'</td><td>'+(x.ts?new Date(x.ts).toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'short'}):'')+'</td></tr>').join('')+
+  '</tbody></table></div></div>';}
 function classLevels(list){return BLOOM.map((_,i)=>{const v=list.map(s=>s.lv[i]).filter(x=>x!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null;});}
 
 function pyramid(lv,title){
@@ -155,7 +173,7 @@ function render(){
   if(!list.length){out.innerHTML='<div class="card msg">لا توجد نتائج لهذه المسابقة بعد.<br><span class="small">تظهر النتائج هنا عندما يُنهي الطلاب اللعبة.</span></div>';return;}
   const cl=classLevels(list),ms=list.map(s=>s.m).filter(x=>x!=null);
   const avg=ms.length?Math.round(ms.reduce((a,b)=>a+b,0)/ms.length):null;
-  const sel=SEL&&list.find(s=>s.n===SEL);if(!sel)SEL=null;
+  const sel=SEL&&list.find(s=>s.id===SEL);if(!sel)SEL=null;
   const lv=sel?sel.lv:cl,title=sel?sel.n:'الصف كاملًا';
   const byM=[...list].sort((a,b)=>(b.m??-1)-(a.m??-1));
   out.innerHTML=
@@ -171,11 +189,11 @@ function render(){
        '<div id="pyr">'+pyramid(lv,title)+'</div>'+
        '<div class="legend"><span><i class="sw" style="background:'+RAMP[0]+'"></i>تمكن منخفض</span><span><i class="sw" style="background:'+RAMP[5]+'"></i>تمكن عالٍ</span><span><i class="sw" style="background:repeating-linear-gradient(45deg,#eef2f2 0 3px,#d0d9d9 3px 5px)"></i>لم يُقَس في اللعب الفردي</span></div></div>'+
      '<div class="card"><h2>درجة تمكّن كل طالب</h2><p class="small">نسبة الإجابات الصحيحة. الرقم على اليمين ترتيبه بالنقاط.</p><div class="bars">'+
-       byM.map(s=>'<button type="button" class="brow'+(s.n===SEL?' sel':'')+'" data-n="'+esc(s.n)+'"><span class="k">'+s.k+'</span><span class="n">'+esc(s.n)+'</span><span class="track"><span class="fill" style="display:block;width:'+(s.m||0)+'%"></span></span><span class="p">'+(s.m??'—')+(s.m!=null?'٪':'')+'</span></button>').join('')+
+       byM.map(s=>'<button type="button" class="brow'+(s.id===SEL?' sel':'')+'" data-n="'+esc(s.id)+'"><span class="k">'+s.k+'</span><span class="n">'+esc(s.n)+'</span><span class="track"><span class="fill" style="display:block;width:'+(s.m||0)+'%"></span></span><span class="p">'+(s.m??'—')+(s.m!=null?'٪':'')+'</span></button>').join('')+
      '</div></div>'+
-   '</div>'+
+   '</div>'+(sel?history(sel):'')+
    '<div class="card"><h2>جدول التمكن</h2><div class="tablewrap"><table><thead><tr><th>الطالب</th><th>الترتيب</th><th>النقاط</th>'+BLOOM.map(b=>'<th>'+b+'</th>').join('')+'<th>التمكن</th><th></th></tr></thead><tbody>'+
-     list.map(s=>'<tr data-n="'+esc(s.n)+'"><td>'+esc(s.n)+'</td><td>'+s.k+'</td><td>'+s.t+'</td>'+s.lv.map(cell).join('')+cell(s.m)+'<td>'+band(s.m)+'</td></tr>').join('')+
+     list.map(s=>'<tr data-n="'+esc(s.id)+'"><td>'+esc(s.n)+'</td><td>'+s.k+'</td><td>'+s.t+'</td>'+s.lv.map(cell).join('')+cell(s.m)+'<td>'+band(s.m)+'</td></tr>').join('')+
      '<tr class="avg"><td>الصف</td><td></td><td></td>'+cl.map(cell).join('')+cell(avg)+'<td>'+band(avg)+'</td></tr>'+
    '</tbody></table></div></div>';
   out.querySelectorAll('[data-n]').forEach(el=>el.onclick=()=>{SEL=SEL===el.dataset.n?null:el.dataset.n;render();window.scrollTo({top:0,behavior:'smooth'});});
@@ -189,12 +207,30 @@ function render(){
 }
 function cell(p){return p==null?'<td class="na">—</td>':'<td style="background:'+shade(p)+';color:'+inkOn(p)+'">'+p+'٪</td>';}
 
+// the last results fetched are kept on this device, so the board shows at once and survives a failed refresh
+const cacheKey=g=>'fanoosDash:'+g;
+function cached(g){try{const o=JSON.parse(localStorage.getItem(cacheKey(g))||'null');return o&&Array.isArray(o.rows)?o:null;}catch(e){return null;}}
+function keepCache(g,rows){try{localStorage.setItem(cacheKey(g),JSON.stringify({ts:Date.now(),rows}));}catch(e){}}
+const when=ts=>new Date(ts).toLocaleString('ar-SA-u-ca-gregory',{weekday:'long',hour:'numeric',minute:'2-digit'});
+function note(t,ok){const n=$('#note');n.hidden=!t;n.textContent=t||'';n.className=ok?'ok':'';}
+function why(e){const m=e&&e.message||'';
+  if(m==='timeout'||m==='busy')return 'جدول Google تأخر في الرد.';
+  if(m==='net')return 'لم يصل الطلب إلى جدول Google. تأكد من الإنترنت.';
+  return m&&m!=='api'?'رد جدول Google: '+m:'';}
+let seq=0;
 async function load(){
-  const out=$('#out');
+  const out=$('#out'),g=$('#game').value,my=++seq;
   if(!API()){out.innerHTML='<div class="card msg">لم يُربط جدول النتائج بعد.</div>';return;}
-  out.innerHTML='<div class="card msg">جارٍ التحميل…</div>';
-  try{const d=await api({a:'list',gid:$('#game').value});DATA=d.rows||[];render();}
-  catch(e){out.innerHTML='<div class="card msg">تعذر جلب النتائج. تأكد من الاتصال ثم اضغط تحديث.</div>';}
+  const c=cached(g);
+  if(c){DATA=c.rows;render();note('يجري التحديث… (المعروض الآن من '+when(c.ts)+')');}
+  else{out.innerHTML='<div class="card msg">جارٍ التحميل…</div>';note('');}
+  try{const d=await api({a:'list',gid:g},i=>{if(my===seq)note('جدول Google بطيء الآن، محاولة '+(i+1)+' من 4…');});
+    if(my!==seq)return; // a newer request (another game picked) owns the screen
+    DATA=d.rows||[];keepCache(g,DATA);render();
+    note(d.v>=3?'':'كود Apps Script المنشور قديم: حدّثه من صفحة الربط حتى تتراكم نتائج كل طالب برقمه.');}
+  catch(e){if(my!==seq)return;
+    if(c)note('تعذر التحديث الآن، والمعروض نتائج '+when(c.ts)+'. '+why(e)+' اضغط تحديث بعد قليل.');
+    else{note('');out.innerHTML='<div class="card msg">تعذر جلب النتائج بعد ٤ محاولات.<br><span class="small">'+esc(why(e))+' اضغط «تحديث» بعد دقيقة. إن تكرر ذلك افتح <a href="setup.html#ids">صفحة الربط</a> وتأكد أن «من يمكنه الوصول» = أي شخص.</span></div>';}}
 }
 try{const g=localStorage.getItem('fanoosDashGame');if(g&&$('#game').querySelector('option[value="'+g+'"]'))$('#game').value=g;}catch(e){}
 $('#game').onchange=()=>{SEL=null;try{localStorage.setItem('fanoosDashGame',$('#game').value);}catch(e){}load();};

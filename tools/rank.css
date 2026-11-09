@@ -12,3 +12,4 @@
 .lb li .s{font-family:var(--f-display);font-size:1.4rem;color:var(--gold);font-variant-numeric:tabular-nums}
 .lb li.me{background:var(--gold);color:var(--on)}
 .lb li.me .s{color:var(--on)}
+.hi{min-height:1.6em;margin:-6px 0 0;font-weight:700;color:var(--gold)}

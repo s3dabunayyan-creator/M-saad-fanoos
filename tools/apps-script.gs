@@ -2,9 +2,11 @@
 // ورقة «الطلاب»: اكتب اسم الطالب في العمود B فيظهر رقمه الخاص في العمود A تلقائيًا.
 const SHEET_NAME = 'النتائج';
 const ROSTER = 'الطلاب';
+const VERSION = 3; // لوحة المعلم تنبّه إذا كان الكود المنشور أقدم من هذا
 const LEVELS = ['تذكر', 'فهم', 'تطبيق', 'تحليل', 'تقييم', 'إبداع'];
-const HEAD = ['الوقت', 'رقم المسابقة', 'الاسم', 'الصحة', 'السرعة', 'المجموع'].concat(LEVELS.map(function (l) { return l + ' %'; }), ['تفاصيل', 'رقم الطالب']);
+const HEAD = ['الوقت', 'رقم المسابقة', 'الاسم', 'الصحة', 'السرعة', 'المجموع'].concat(LEVELS.map(function (l) { return l + ' %'; }), ['تفاصيل', 'رقم الطالب', 'رمز المحاولة']);
 const ID_COL = 13; // 0-based column of «رقم الطالب» in النتائج
+const U_COL = 14;  // 0-based column of «رمز المحاولة»: the same result sent twice is saved once
 
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -110,13 +112,30 @@ function add_(p) {
       pct.push(Math.round(100 * got / mx));
     } else pct.push('');
   }
+  const u = String(p.u || '').replace(/[^\w-]/g, '').slice(0, 40);
+  // when the game was played (a result kept on the student's device can arrive later)
+  const now = Date.now(), t = Number(p.t);
+  const when = new Date(t > now - 45 * 864e5 && t < now + 36e5 ? t : now);
+  const cache = CacheService.getScriptCache();
+  if (u && cache.get('u' + u)) return;
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(28000)) throw new Error('busy');
   try {
     const sh = sheet_();
+    if (u && seen_(sh, u)) return;
     if (sh.getRange(1, ID_COL + 1).getValue() === '') sh.getRange(1, ID_COL + 1).setValue(HEAD[ID_COL]);
-    sh.appendRow([new Date(), gid, name, c, sp, c + sp].concat(pct, [JSON.stringify(clean), id]));
+    if (sh.getRange(1, U_COL + 1).getValue() === '') sh.getRange(1, U_COL + 1).setValue(HEAD[U_COL]);
+    sh.appendRow([when, gid, name, c, sp, c + sp].concat(pct, [JSON.stringify(clean), id, u]));
+    if (u) cache.put('u' + u, '1', 21600);
   } finally { lock.releaseLock(); }
+}
+
+// was this attempt already saved? (looks at the latest rows only)
+function seen_(sh, u) {
+  const last = sh.getLastRow();
+  if (last < 2) return false;
+  const n = Math.min(400, last - 1);
+  return sh.getRange(last - n + 1, U_COL + 1, n, 1).getValues().some(function (r) { return String(r[0]) === u; });
 }
 
 function list_(gid) {
@@ -147,6 +166,7 @@ function doGet(e) {
   } catch (err) {
     out = { ok: false, error: String(err && err.message || err) };
   }
+  out.v = VERSION;
   const json = JSON.stringify(out), cb = String(p.cb || '');
   if (/^[A-Za-z_$][\w$]{0,40}$/.test(cb)) {
     return ContentService.createTextOutput(cb + '(' + json + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);

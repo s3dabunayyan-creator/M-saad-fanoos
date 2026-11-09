@@ -21,6 +21,8 @@ h1,h2{font-family:var(--f-display);font-weight:400;margin:0;line-height:1.3}
 h1{color:var(--brand);font-size:2.2rem}
 h2{font-size:1.5rem}
 .small{font-size:.85rem;color:var(--muted)}
+#note{margin:0 0 10px;padding:8px 14px;border-radius:12px;background:#fff3d6;color:#6b4700;font-size:.9rem}
+#note.ok{background:#e3f6e3;color:#0a5a0a}
 .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 select,button{font:inherit}
@@ -93,6 +95,7 @@ tbody tr:hover td:first-child{text-decoration:underline}
     </div>
   </div>
 
+  <p id="note" hidden></p>
   <div id="out"><div class="card msg">جارٍ التحميل…</div></div>
 </div>
 <div id="tip" hidden></div>
@@ -111,11 +114,14 @@ const inkOn=p=>p!=null&&p>=50?'#fff':'#0f2a2b';
 const band=p=>p==null?'':p>=85?'<span class="band b3">✓ متمكن</span>':p>=65?'<span class="band b2">≈ قريب</span>':'<span class="band b1">! يحتاج دعم</span>';
 const pct=r=>r&&r[1]>0?Math.round(100*r[0]/r[1]):null;
 
-function api(params){return new Promise((res,rej)=>{const u=API();if(!u)return rej(new Error('off'));
+function api1(params){return new Promise((res,rej)=>{const u=API();if(!u)return rej(new Error('off'));
   const cb='fz'+Date.now()+Math.floor(Math.random()*1e4),s=document.createElement('script');
-  const done=()=>{clearTimeout(t);delete window[cb];s.remove();};const t=setTimeout(()=>{done();rej(new Error('timeout'));},20000);
+  const done=()=>{clearTimeout(t);window[cb]=()=>{};s.remove();};const t=setTimeout(()=>{done();rej(new Error('timeout'));},30000);
   window[cb]=d=>{done();d&&d.ok?res(d):rej(new Error((d&&d.error)||'api'));};s.onerror=()=>{done();rej(new Error('net'));};
   s.src=u+(u.includes('?')?'&':'?')+new URLSearchParams({...params,cb});document.head.appendChild(s);});}
+// Google's script is sometimes slow to wake up or busy saving students' results: try again before giving up
+async function api(params,onRetry){let err;for(let i=0;i<4;i++){
+  try{return await api1(params);}catch(e){err=e;if(e.message==='off')break;if(i<3){onRetry&&onRetry(i+1);await new Promise(r=>setTimeout(r,[2000,5000,10000][i]));}}}throw err;}
 
 const norm=n=>String(n).replace(/\s+/g,' ').trim();
 // one row per student: their best attempt in each game, summed across the games shown
@@ -201,12 +207,30 @@ function render(){
 }
 function cell(p){return p==null?'<td class="na">—</td>':'<td style="background:'+shade(p)+';color:'+inkOn(p)+'">'+p+'٪</td>';}
 
+// the last results fetched are kept on this device, so the board shows at once and survives a failed refresh
+const cacheKey=g=>'fanoosDash:'+g;
+function cached(g){try{const o=JSON.parse(localStorage.getItem(cacheKey(g))||'null');return o&&Array.isArray(o.rows)?o:null;}catch(e){return null;}}
+function keepCache(g,rows){try{localStorage.setItem(cacheKey(g),JSON.stringify({ts:Date.now(),rows}));}catch(e){}}
+const when=ts=>new Date(ts).toLocaleString('ar-SA-u-ca-gregory',{weekday:'long',hour:'numeric',minute:'2-digit'});
+function note(t,ok){const n=$('#note');n.hidden=!t;n.textContent=t||'';n.className=ok?'ok':'';}
+function why(e){const m=e&&e.message||'';
+  if(m==='timeout'||m==='busy')return 'جدول Google تأخر في الرد.';
+  if(m==='net')return 'لم يصل الطلب إلى جدول Google. تأكد من الإنترنت.';
+  return m&&m!=='api'?'رد جدول Google: '+m:'';}
+let seq=0;
 async function load(){
-  const out=$('#out');
+  const out=$('#out'),g=$('#game').value,my=++seq;
   if(!API()){out.innerHTML='<div class="card msg">لم يُربط جدول النتائج بعد.</div>';return;}
-  out.innerHTML='<div class="card msg">جارٍ التحميل…</div>';
-  try{const d=await api({a:'list',gid:$('#game').value});DATA=d.rows||[];render();}
-  catch(e){out.innerHTML='<div class="card msg">تعذر جلب النتائج. تأكد من الاتصال ثم اضغط تحديث.</div>';}
+  const c=cached(g);
+  if(c){DATA=c.rows;render();note('يجري التحديث… (المعروض الآن من '+when(c.ts)+')');}
+  else{out.innerHTML='<div class="card msg">جارٍ التحميل…</div>';note('');}
+  try{const d=await api({a:'list',gid:g},i=>{if(my===seq)note('جدول Google بطيء الآن، محاولة '+(i+1)+' من 4…');});
+    if(my!==seq)return; // a newer request (another game picked) owns the screen
+    DATA=d.rows||[];keepCache(g,DATA);render();
+    note(d.v>=3?'':'كود Apps Script المنشور قديم: حدّثه من صفحة الربط حتى تتراكم نتائج كل طالب برقمه.');}
+  catch(e){if(my!==seq)return;
+    if(c)note('تعذر التحديث الآن، والمعروض نتائج '+when(c.ts)+'. '+why(e)+' اضغط تحديث بعد قليل.');
+    else{note('');out.innerHTML='<div class="card msg">تعذر جلب النتائج بعد ٤ محاولات.<br><span class="small">'+esc(why(e))+' اضغط «تحديث» بعد دقيقة. إن تكرر ذلك افتح <a href="setup.html#ids">صفحة الربط</a> وتأكد أن «من يمكنه الوصول» = أي شخص.</span></div>';}}
 }
 try{const g=localStorage.getItem('fanoosDashGame');if(g&&$('#game').querySelector('option[value="'+g+'"]'))$('#game').value=g;}catch(e){}
 $('#game').onchange=()=>{SEL=null;try{localStorage.setItem('fanoosDashGame',$('#game').value);}catch(e){}load();};

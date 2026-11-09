@@ -1,15 +1,16 @@
 // Runs apps-script.gs against a fake spreadsheet to check roster ids, add/list/who and JSONP.
 const fs=require('fs'),vm=require('vm'),crypto=require('crypto'),assert=require('assert');
 function fakeSheet(name){const rows=[];return {rows,getName:()=>name,appendRow:r=>rows.push(r.slice()),setFrozenRows(){},setRightToLeft(){},
-  getDataRange:()=>({getValues:()=>rows.map(r=>r.slice())}),
-  getRange:(r,c,nr,nc)=>({getValue:()=>(rows[r-1]||[])[c-1]??'',setValue:v=>{(rows[r-1]||(rows[r-1]=[]))[c-1]=v;},
+  getLastRow:()=>rows.length,getDataRange:()=>({getValues:()=>rows.map(r=>r.slice())}),
+  getRange:(r,c,nr,nc)=>({getValues:()=>rows.slice(r-1,r-1+nr).map(x=>[x[c-1]??'']),getValue:()=>(rows[r-1]||[])[c-1]??'',setValue:v=>{(rows[r-1]||(rows[r-1]=[]))[c-1]=v;},
     setValues:vs=>vs.forEach((x,i)=>{(rows[r-1+i]||(rows[r-1+i]=[]))[c-1]=x[0];}),getSheet:()=>sheets[name]})};}
-const sheets={};const props={};
+const sheets={};const props={};const cache={};
 const ctx={SpreadsheetApp:{getActiveSpreadsheet:()=>({getSheetByName:n=>sheets[n]||null,insertSheet:n=>sheets[n]=fakeSheet(n)}),
     getUi:()=>({createMenu:()=>({addItem(){return this;},addToUi(){}})})},
   PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]||null,setProperty:(k,v)=>props[k]=v})},
   Utilities:{getUuid:()=>'uuid-1',DigestAlgorithm:{SHA_256:1},computeDigest:(a,s)=>[...crypto.createHash('sha256').update(s).digest()].map(b=>b>127?b-256:b)},
-  LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},
+  LockService:{getScriptLock:()=>({tryLock:()=>true,releaseLock(){}})},
+  CacheService:{getScriptCache:()=>({get:k=>cache[k]||null,put:(k,v)=>cache[k]=v})},
   ContentService:{MimeType:{JAVASCRIPT:'js',JSON:'json'},createTextOutput:t=>({setMimeType:()=>t})},JSON,Math,Number,String,Array,Date,Error,Object};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/apps-script.gs','utf8'),ctx);
 const g=p=>JSON.parse(ctx.doGet({parameter:p}));
@@ -33,6 +34,14 @@ g({a:'add',gid:'3101',id:'777',c:'1',sp:'1'});
 const all=g({gid:''}).rows;console.log(all);
 assert(all.length===3&&all[0].k===sara.k&&all[1].k===sara.k&&all[1].n==='سارة أحمد');
 assert.strictEqual(sheets['النتائج'].rows[0][13],'رقم الطالب');assert.strictEqual(sheets['النتائج'].rows[2][13],ids[0]);
+// the same attempt sent twice (retry, or kept on the device and resent) is saved once, even without the cache
+const before=sheets['النتائج'].rows.length;
+g({a:'add',gid:'5101',id:'777',c:'5',sp:'1',u:'abc-1',t:String(Date.now()-864e5)});
+for(const k in cache)delete cache[k];
+const r2=g({a:'add',gid:'5101',id:'777',c:'5',sp:'1',u:'abc-1'});
+assert.strictEqual(sheets['النتائج'].rows.length,before+1);assert.strictEqual(r2.v,3);
+const saved=sheets['النتائج'].rows[before];assert.strictEqual(saved[14],'abc-1');assert(Date.now()-saved[0].getTime()>8e7);
+assert.strictEqual(sheets['النتائج'].rows[0][14],'رمز المحاولة');
 // errors and JSONP guard still behave
 assert.strictEqual(g({a:'add',gid:'12',name:'x'}).ok,false);
 console.log(ctx.doGet({parameter:{cb:'alert(1)//'}}).slice(0,30));

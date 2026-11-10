@@ -3030,13 +3030,13 @@ function idField(){const me=myId();
    '<p class="hi" id="jhi">'+(me.id&&me.n?'👋 '+esc(me.n):'')+'</p>';}
 function idWire(){const i=$('#ji');if(i)i.oninput=()=>{const me=myId();$('#jhi').textContent=me.id&&me.n&&i.value.replace(/\D/g,'')===me.id?'👋 '+me.n:'';};}
 async function whoAmI(msg,btn){const id=$('#ji').value.replace(/\D/g,''),me=myId();
-  if(id.length<3){msg.textContent='اكتب رقمك';$('#ji').focus();return null;}
+  if(id.length<3)return {old:true}; // no number: enter by name instead of being blocked
   btn.disabled=true;msg.textContent='…';
-  try{const d=await api({a:'who',id});
+  try{const d=await Promise.race([api({a:'who',id},1),new Promise((_,rej)=>setTimeout(()=>rej(new Error('slow')),10000))]); // never keep the student waiting more than 10 s
     if(!('st' in d)){msg.textContent='';return {old:true};} // results sheet not updated for student numbers yet
-    if(!d.st){msg.textContent='هذا الرقم غير مسجّل، اسأل معلمك';return null;}
+    if(!d.st)return {old:true}; // number not in the الطلاب sheet: let the student in by name
     setMyId({id,n:d.st.n,k:d.st.k});msg.textContent='';return {id,n:d.st.n,k:d.st.k};}
-  catch(e){if(me.id===id&&me.n){msg.textContent='';return me;}msg.textContent='تعذر الاتصال، حاول مرة أخرى';return null;}
+  catch(e){if(me.id===id&&me.n){msg.textContent='';return me;}return {old:true};} // sheet unreachable: play by name, result is queued
   finally{btn.disabled=false;}}
 setTimeout(flushPending,2500);
 })();
